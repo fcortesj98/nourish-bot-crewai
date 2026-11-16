@@ -7,9 +7,6 @@ AI NourishBot is a nutrition assistant built from **collaborating AI agents** ([
 
 It runs as a [Gradio](https://gradio.app/) web app, from the command line, or as a Python library.
 
-> [!IMPORTANT]
-> **Origin of this code.** This project is **not an original work**. It comes from the **IBM Skills Network** guided project **"Building your own AI Nutrition Coach using a Multi-Agent System and Multimodal AI"**, part of the **IBM RAG and Agentic AI Professional Certificate**. The original code base was written by the lab's authors and is published on GitHub by IBM Developer Skills Network. This repository **refactors and reorganizes that code** into a modular package and adds documentation, tests and a CLI. All credit for the original design, prompts, agents and application goes to the lab's authors. See [Credits & Attribution](#-credits--attribution).
-
 ---
 
 ## ✨ Features
