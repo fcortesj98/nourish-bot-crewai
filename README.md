@@ -12,24 +12,6 @@ It runs as a [Gradio](https://gradio.app/) web app, from the command line, or as
 
 ---
 
-## Table of Contents
-
-1. [Features](#-features)
-2. [How It Works](#-how-it-works)
-3. [Models Used](#-models-used)
-4. [Project Structure](#-project-structure)
-5. [Components](#-components)
-6. [Setup](#-setup)
-7. [Usage](#-usage)
-8. [Configuration](#-configuration)
-9. [Testing](#-testing)
-10. [What Changed in the Refactor](#-what-changed-in-the-refactor)
-11. [Troubleshooting](#-troubleshooting)
-12. [Disclaimer](#-disclaimer)
-13. [Credits & Attribution](#-credits--attribution)
-
----
-
 ## ✨ Features
 
 | Feature | Description |
