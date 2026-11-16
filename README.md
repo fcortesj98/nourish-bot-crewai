@@ -201,51 +201,6 @@ Tools are thin LangChain `@tool` wrappers (their names and docstrings are what a
 
 ---
 
-## ⚙️ Setup
-
-### Prerequisites
-
-- **Python 3.10 to 3.12** (3.11 recommended, as in the lab). CrewAI 0.75 does not install on Python 3.13.
-- Access to **IBM watsonx.ai** (automatic inside the IBM Skills Network Cloud IDE).
-- An LLM for the CrewAI agents: CrewAI's default (OpenAI, set `OPENAI_API_KEY`) or any LiteLLM model through `NOURISHBOT_AGENT_LLM`. The Skills Network lab environment already provides this.
-
-### Option A: IBM Skills Network Cloud IDE (the lab)
-
-```bash
-cd /home/project/NourishBot          # copy or clone this repo here
-python3.11 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt      # takes about 3-5 minutes
-python app.py
-```
-
-Then click **Web Application** (port **5000**). No API keys are needed: the lab injects watsonx.ai credentials and the project id defaults to `skills-network`.
-
-### Option B: Local machine
-
-```bash
-git clone <your-repo-url> NourishBot && cd NourishBot
-python3.11 -m venv venv
-source venv/bin/activate              # Windows: venv\Scripts\activate
-pip install -r requirements.txt
-cp .env.example .env                  # then edit .env
-```
-
-Minimum `.env` outside the lab:
-
-```dotenv
-WATSONX_URL=https://us-south.ml.cloud.ibm.com
-WATSONX_API_KEY=<your IBM Cloud API key>
-WATSONX_PROJECT_ID=<your watsonx.ai project id>
-
-# Agent reasoning LLM, pick one:
-OPENAI_API_KEY=<key>                                        # CrewAI default
-# NOURISHBOT_AGENT_LLM=watsonx/meta-llama/llama-3-3-70b-instruct
-# WATSONX_APIKEY=<same IBM Cloud API key>   # LiteLLM's variable name for watsonx
-```
-
----
-
 ## 🚀 Usage
 
 ### 1. Web app
@@ -283,34 +238,6 @@ from nourishbot.services import extract_ingredients, filter_by_dietary_restricti
 raw = extract_ingredients("examples/food-1.jpg")
 ```
 
-### Extending
-
-- **Change an agent's persona or a task's instructions:** edit the YAML files in `nourishbot/crews/config/`.
-- **Add a tool:** write the logic in `services/`, wrap it with `@tool` in `tools/`, then add it to an agent in `crews/base.py`.
-- **Add a workflow:** create a crew in `crews/`, add a `WorkflowType` value and a formatter in `workflows.py`, and the UI radio button and CLI pick it up automatically.
-
----
-
-## 🔧 Configuration
-
-All settings live in `nourishbot/settings.py` and can be overridden with environment variables or a `.env` file:
-
-| Variable | Default | Description |
-|---|---|---|
-| `WATSONX_URL` | `https://us-south.ml.cloud.ibm.com` | watsonx.ai endpoint |
-| `WATSONX_API_KEY` | *(none: lab-injected)* | IBM Cloud API key |
-| `WATSONX_PROJECT_ID` | `skills-network` | watsonx.ai project id |
-| `NOURISHBOT_VISION_MODEL` | `meta-llama/llama-3-2-90b-vision-instruct` | Vision model for image tools |
-| `NOURISHBOT_TEXT_MODEL` | `ibm/granite-4-h-small` | Text model for dietary filtering |
-| `NOURISHBOT_VISION_MAX_TOKENS` | `300` | Max tokens for vision replies |
-| `NOURISHBOT_TEXT_MAX_TOKENS` | `150` | Max tokens for the diet filter |
-| `NOURISHBOT_AGENT_LLM` | *(CrewAI default)* | LiteLLM model string for agent reasoning |
-| `NOURISHBOT_IMAGE_TIMEOUT` | `30` | Seconds to wait when downloading image URLs |
-| `NOURISHBOT_HOST` | `127.0.0.1` | Web server host (`0.0.0.0` for Docker/remote) |
-| `NOURISHBOT_PORT` | `5000` | Web server port |
-
----
-
 ## 🧪 Testing
 
 ```bash
@@ -322,52 +249,7 @@ The 17 tests run **offline**: watsonx.ai calls are mocked, and the crew tests on
 
 ---
 
-## 🔄 What Changed in the Refactor
-
-Functionally the app behaves like the lab's final version. A side-by-side check confirmed that the agents (roles, goals, backstories, tools, iteration limits), task definitions, output schemas, prompts and Markdown formatters are **identical** to the original. The changes are structural, plus a few robustness fixes:
-
-| Original (`5-final` lab code) | Refactored |
-|---|---|
-| `src/tools.py`: four tools, each repeating image loading, base64 encoding and model setup | `utils/images.py` + `services/watsonx_client.py` + `services/food_ai.py`; tools are about 5 lines each |
-| watsonx `Credentials`/`APIClient` created at import time in **two** modules (`tools.py`, `crew.py`) | One lazy, cached client in `services/watsonx_client.py`; the unused `APIClient` was removed |
-| Hard-coded URL, project id and model ids | `settings.py` with env-var / `.env` overrides; defaults unchanged |
-| Prompts embedded inside tool functions | `prompts.py` (text kept verbatim) |
-| `src/crew.py`: base class + both crews in one file | `crews/base.py`, `crews/recipe_crew.py`, `crews/analysis_crew.py` |
-| Tasks received `depends_on=` / `input_data=` arguments | Removed: CrewAI 0.75 silently ignores them (verified). Data already flows between tasks through `Process.sequential`, so behaviour is unchanged |
-| `app.py`: UI, CSS/JS, formatters and orchestration in one 240-line file | `ui/interface.py`, `ui/assets.py`, `formatting.py`, `workflows.py`; `app.py` is about 20 lines |
-| Uploads always saved to `./uploaded_image.jpg` (concurrent users overwrite each other; PNGs with transparency crash) | Unique temp file per request, converted to RGB, deleted afterwards |
-| No input validation; errors leave a blank panel | Friendly `gr.Error` messages for a missing image or workflow, or a failed run |
-| `requests.get` without a timeout | Configurable timeout |
-| Example paths relative to the working directory | Absolute paths from the package location |
-| README described a `main.py` CLI that didn't exist | Working CLI: `python -m nourishbot` |
-| No tests | `tests/` (formatting, utils, services with mocks, crew wiring) |
-
----
-
-## 🩺 Troubleshooting
-
-| Problem | Fix |
-|---|---|
-| `ModuleNotFoundError: nourishbot` | Run commands from the project root (the folder that contains `app.py`). |
-| Page doesn't load in the Cloud IDE | Make sure `python app.py` is still running and you opened port **5000**. |
-| watsonx.ai says the model is not supported or deprecated | Set `NOURISHBOT_VISION_MODEL` / `NOURISHBOT_TEXT_MODEL` to a model available in your region (see [Models Used](#-models-used)). |
-| `OPENAI_API_KEY` / auth error from the agents | Set `OPENAI_API_KEY`, or set `NOURISHBOT_AGENT_LLM` to another LiteLLM provider. |
-| `pip` can't install `crewai==0.75.0` | Use Python 3.10-3.12. |
-| `No matching distribution found for litellm==1.50.2` | Some package indexes no longer serve that release. Change the pin in `requirements.txt` to `litellm==1.53.1`; the app and tests were verified with it. |
-| Console shows telemetry or connection errors from `opentelemetry` | These come from CrewAI's anonymous telemetry and are harmless. Silence them with `export OTEL_SDK_DISABLED=true`. |
-| The app fails occasionally | LLM output varies from run to run. Refresh and try again, as the lab suggests. |
-
-Stop the server with `Ctrl+C`.
-
----
-
-## ⚠️ Disclaimer
-
-The recipes and nutritional information are generated automatically from image analysis. They are **approximate** and may not account for every dietary restriction, allergen or unsafe ingredient. Always review suggestions before preparing or eating food, and consult a qualified nutritionist or healthcare provider for personal dietary or medical advice. The output is guidance, **not** a medical or dietary prescription.
-
----
-
-## 🙏 Credits & Attribution
+## Credits & Attribution
 
 **This code base originates from IBM Skills Network course material.** The refactor keeps the original design, agent and task definitions, prompts and UI.
 
