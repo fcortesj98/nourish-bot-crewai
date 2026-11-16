@@ -1,10 +1,3 @@
----
-title: AI_NourishBot
-app_file: app.py
-sdk: gradio
-sdk_version: 5.12.0
----
-
 # 🥗 AI NourishBot: Multi-Agent, Multimodal Dietary Assistant
 
 AI NourishBot is a nutrition assistant built from **collaborating AI agents** ([CrewAI](https://www.crewai.com/)) and **several foundation models on IBM watsonx.ai**. Upload a photo of a dish or of your fridge and it will either:
